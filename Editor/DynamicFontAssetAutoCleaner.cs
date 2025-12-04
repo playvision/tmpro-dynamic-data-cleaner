@@ -11,6 +11,7 @@ using System;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 
 namespace TMProDynamicDataCleaner.Editor
 {
@@ -29,27 +30,20 @@ namespace TMProDynamicDataCleaner.Editor
                         continue;
 
                     // TMP_FontAsset is not marked as sealed class, so also checking for subclasses just in case
-                    if (assetType != typeof(TMP_FontAsset) && assetType.IsSubclassOf(typeof(TMP_FontAsset)) == false)
-                        continue;
+                    if (assetType == typeof(TMP_FontAsset) || assetType.IsSubclassOf(typeof(TMP_FontAsset)))
+                    {
+                        var fontAsset = AssetDatabase.LoadMainAssetAtPath(path) as TMP_FontAsset;
+                        ClearFontAssetData(fontAsset);
+                    }
 
-                    // Loading the asset only when we sure it is a font asset
-                    var fontAsset = AssetDatabase.LoadMainAssetAtPath(path) as TMP_FontAsset;
-
-                    // Theoretically this case is not possible due to asset type check above, but to be on the safe side check for null
-                    if (fontAsset == null)
-                        continue;
-
-#if UNITY_2022_1_OR_NEWER
-                    bool isDynamic = fontAsset.atlasPopulationMode is AtlasPopulationMode.Dynamic or AtlasPopulationMode.DynamicOS;
-#else
-                    bool isDynamic = fontAsset.atlasPopulationMode is AtlasPopulationMode.Dynamic;
+#if UNITY_2021_2_OR_NEWER
+                    // FontAsset is not marked as sealed class, so also checking for subclasses just in case
+                    else if (assetType == typeof(FontAsset) || assetType.IsSubclassOf(typeof(FontAsset)))
+                    {
+                        var fontAsset = AssetDatabase.LoadMainAssetAtPath(path) as FontAsset;
+                        ClearFontAssetData(fontAsset);
+                    }
 #endif
-
-                    if (!isDynamic)
-                        continue;
-                        
-                    // Debug.Log("Clearing font asset data at " + path);
-                    fontAsset.ClearFontAssetData(setAtlasSizeToZero: true);
                 }
                 catch (Exception e)
                 {
@@ -60,5 +54,35 @@ namespace TMProDynamicDataCleaner.Editor
 
             return paths;
         }
+
+
+        private static void ClearFontAssetData(TMP_FontAsset fontAsset)
+        {
+            if (fontAsset == null) return;
+
+#if UNITY_2022_1_OR_NEWER
+            bool isDynamic = fontAsset.atlasPopulationMode is TMPro.AtlasPopulationMode.Dynamic or TMPro.AtlasPopulationMode.DynamicOS;
+#else
+            bool isDynamic = fontAsset.atlasPopulationMode is TMPro.AtlasPopulationMode.Dynamic;
+#endif
+            if(isDynamic)
+                fontAsset.ClearFontAssetData(setAtlasSizeToZero: true);
+
+        }
+
+#if UNITY_2021_2_OR_NEWER
+        private static void ClearFontAssetData(FontAsset fontAsset)
+        {
+            if (fontAsset == null) return;
+
+#if UNITY_2022_1_OR_NEWER
+            bool isDynamic = fontAsset.atlasPopulationMode is UnityEngine.TextCore.Text.AtlasPopulationMode.Dynamic or UnityEngine.TextCore.Text.AtlasPopulationMode.DynamicOS;
+#else
+            bool isDynamic = fontAsset.atlasPopulationMode is AtlasPopulationMode.Dynamic;
+#endif
+            if(isDynamic)
+                fontAsset.ClearFontAssetData(setAtlasSizeToZero: true);
+        }
+#endif
     }
 }
