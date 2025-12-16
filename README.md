@@ -1,3 +1,9 @@
+### `https://github.com/playvision/tmpro-dynamic-data-cleaner.git#upm`
+
+---
+
+# Original README:
+
 ## About
 TextMeshPro dynamic font assets have a very annoying habit of saving their dynamically generated binary data in the
 same text file as their configuration data. This causes massive headaches for version control.
